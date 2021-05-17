@@ -2,12 +2,11 @@
 ; Rotina que faz a varredura do teclado e retorna o valor da tecla pressionada	*
 ;********************************************************************************
 Calculadora_keyRead:
-;Calculadora.c,19 :: 		static char keyRead(char keys[])
-;Calculadora.c,23 :: 		key = keypad_key_press();
+;verificar se há alguma tecla pressionada
 	CALL       _Keypad_Key_Press+0
 	MOVF       R0+0, 0
 	MOVWF      Calculadora_keyRead_key_L0+0
-;Calculadora.c,24 :: 		if(key!=0) return keys[key-1];
+;se houver tecla pressionada
 	MOVF       R0+0, 0
 	XORLW      0
 	BTFSC      STATUS+0, 2
@@ -25,64 +24,73 @@ Calculadora_keyRead:
 	MOVWF      R0+0
 	GOTO       L_end_keyRead
 L_Calculadora_keyRead0:
-;Calculadora.c,25 :: 		return 0;
+;zera registrador R0 para retomar ao topo da pilha
 	CLRF       R0+0
-;Calculadora.c,26 :: 		}
+;retorna para o topo da pilha
 L_end_keyRead:
 	RETURN
-; end of Calculadora_keyRead
+;********************************************************************************
+
+
 ;********************************************************************************
 ; Rotina de inicialização do sistema						*
 ;********************************************************************************
 _main:
-;Calculadora.c,28 :: 		void main()
-;Calculadora.c,32 :: 		keypad_init();
+;inicializa o teclado
 	CALL       _Keypad_Init+0
-;Calculadora.c,33 :: 		Lcd_Init();
+;inicializa o LCD
 	CALL       _Lcd_Init+0
-;Calculadora.c,34 :: 		Lcd_Cmd(_LCD_CLEAR);
+;limpa o LCD
 	MOVLW      1
 	MOVWF      FARG_Lcd_Cmd_out_char+0
 	CALL       _Lcd_Cmd+0
-;Calculadora.c,35 :: 		Lcd_Cmd(_LCD_CURSOR_OFF);
+;remove cursor do LCD
 	MOVLW      12
 	MOVWF      FARG_Lcd_Cmd_out_char+0
 	CALL       _Lcd_Cmd+0
-;Calculadora.c,37 :: 		while(1)
+;********************************************************************************
+	
+	
 ;********************************************************************************
 ; Rotina de verificações de estados do sistema					*
 ;********************************************************************************
 L_main1:
-;Calculadora.c,39 :: 		k = keyRead(teclas);//leitura do teclado
+;guarda o valor digitado pelo teclado
 	MOVLW      _teclas+0
 	MOVWF      FARG_Calculadora_keyRead_keys+0
 	CALL       Calculadora_keyRead+0
 	MOVF       R0+0, 0
 	MOVWF      main_k_L0+0
-;Calculadora.c,41 :: 		if(CALCULO_OK && k)
+;se foi realizado uma operação matemática com um valor numérico
 	BTFSS      _flags+0, 0
 	GOTO       L_main5
 	MOVF       main_k_L0+0, 0
 	BTFSC      STATUS+0, 2
 	GOTO       L_main5
 ;********************************************************************************
+
+
+;********************************************************************************
 ; Rotina de reset de display							*
 ;********************************************************************************
 L__main37:
-;Calculadora.c,43 :: 		pos = 0;//reseta posicao
+;reseta a posição de leitura
 	CLRF       main_pos_L0+0
-;Calculadora.c,44 :: 		CALCULO_OK = 0;//reseta calculo
+;reseta a operação matemática
 	BCF        _flags+0, 0
-;Calculadora.c,45 :: 		lcd_clear();//limpa display
+;limpa o display
 	MOVLW      1
 	MOVWF      FARG_Lcd_Cmd_out_char+0
 	CALL       _Lcd_Cmd+0
-;Calculadora.c,46 :: 		lcd_cmd(_LCD_RETURN_HOME);
+;retorna o cursor para q posição inicial
 	MOVLW      2
 	MOVWF      FARG_Lcd_Cmd_out_char+0
 	CALL       _Lcd_Cmd+0
-;Calculadora.c,47 :: 		for(i=0;i<8;i++){//limpa as variaveis
+;limpa variáveis
 	CLRF       main_i_L0+0
+;********************************************************************************
+
+	
 ;********************************************************************************
 ; Rotina de reset de variáveis							*
 ;********************************************************************************
@@ -91,17 +99,17 @@ L_main6:
 	SUBWF      main_i_L0+0, 0
 	BTFSC      STATUS+0, 0
 	GOTO       L_main7
-;Calculadora.c,48 :: 		*(numero + i) = 0;
+;limpa os bit do número
 	MOVF       main_i_L0+0, 0
 	ADDLW      _numero+0
 	MOVWF      FSR
 	CLRF       INDF+0
-;Calculadora.c,49 :: 		*(resultado + i) = 0;
+;reseta os bits do primeiro byte do resultado
 	MOVF       main_i_L0+0, 0
 	ADDLW      _resultado+0
 	MOVWF      FSR
 	CLRF       INDF+0
-;Calculadora.c,50 :: 		*(resultado +i + 8) = 0;
+;reseta os bits do segundo byte do resultado
 	MOVF       main_i_L0+0, 0
 	ADDLW      _resultado+0
 	MOVWF      R0+0
@@ -109,17 +117,20 @@ L_main6:
 	ADDWF      R0+0, 0
 	MOVWF      FSR
 	CLRF       INDF+0
-;Calculadora.c,47 :: 		for(i=0;i<8;i++){//limpa as variaveis
+;incrementa o contador do laço
 	INCF       main_i_L0+0, 1
-;Calculadora.c,51 :: 		}
+;retorna para o começo do laço
 	GOTO       L_main6
 L_main7:
-;Calculadora.c,52 :: 		}
+;final do laço
+;********************************************************************************
+    
+    
 ;********************************************************************************
 ; Rotina de entrada das parcelas						*
 ;********************************************************************************
 L_main5:
-;Calculadora.c,55 :: 		if((k>='0' && k<='9') || k=='.')
+;se a tecla pressionada for um número
 	MOVLW      48
 	SUBWF      main_k_L0+0, 0
 	BTFSS      STATUS+0, 0
@@ -136,21 +147,21 @@ L__main36:
 	GOTO       L__main35
 	GOTO       L_main13
 L__main35:
-;Calculadora.c,57 :: 		*(numero + pos++) = k;
+;atribui posição dos bits no LCD
 	MOVF       main_pos_L0+0, 0
 	ADDLW      _numero+0
 	MOVWF      FSR
 	MOVF       main_k_L0+0, 0
 	MOVWF      INDF+0
 	INCF       main_pos_L0+0, 1
-;Calculadora.c,58 :: 		if(pos >= 8) pos = 0;
+;reseta posição para o começo do byte
 	MOVLW      8
 	SUBWF      main_pos_L0+0, 0
 	BTFSS      STATUS+0, 0
 	GOTO       L_main14
 	CLRF       main_pos_L0+0
 L_main14:
-;Calculadora.c,59 :: 		lcd_Out_CP((numero+(pos-1)));
+;printa no LCD o número no bit correspondente
 	MOVLW      1
 	SUBWF      main_pos_L0+0, 0
 	MOVWF      R0+0
@@ -161,13 +172,17 @@ L_main14:
 	ADDLW      _numero+0
 	MOVWF      FARG_Lcd_Out_CP_text+0
 	CALL       _Lcd_Out_CP+0
-;Calculadora.c,60 :: 		}
+;salto para finalização da rotina principal
 	GOTO       L_main15
+;********************************************************************************
+	
+	
 ;********************************************************************************
 ; Rotina de entrada da operação matemática					*
 ;********************************************************************************
 L_main13:
 ;Calculadora.c,61 :: 		else if(k == '+' || k=='-' || k=='/' || k=='*')
+;verificação de símbolo aritmético
 	MOVF       main_k_L0+0, 0
 	XORLW      43
 	BTFSC      STATUS+0, 2
@@ -186,16 +201,16 @@ L_main13:
 	GOTO       L__main34
 	GOTO       L_main18
 L__main34:
-;Calculadora.c,63 :: 		op = k;
+;armazenamento da variável no registrador main_op_L
 	MOVF       main_k_L0+0, 0
-	MOVWF      main_op_L0+0
-;Calculadora.c,64 :: 		pos = 0;
+	MOVWF      main_op_L_L0+0
+;reset do registrador main_pos (posição)
 	CLRF       main_pos_L0+0
-;Calculadora.c,65 :: 		lcd_chr_CP(op);
+;chamada de função para impressão do símbolo no LCD
 	MOVF       main_k_L0+0, 0
 	MOVWF      FARG_Lcd_Chr_CP_out_char+0
 	CALL       _Lcd_Chr_CP+0
-;Calculadora.c,66 :: 		lvalue = atof(numero);
+;conversão texto p/ número real e atribuição do mesmo para registrador _lvalue
 	MOVLW      _numero+0
 	MOVWF      FARG_atof_s+0
 	CALL       _atof+0
@@ -207,7 +222,7 @@ L__main34:
 	MOVWF      _lvalue+2
 	MOVF       R0+3, 0
 	MOVWF      _lvalue+3
-;Calculadora.c,67 :: 		LimparNumero;
+;limpa variáveis
 	CLRF       main_i_L0+0
 L_main19:
 	MOVLW      8
@@ -221,18 +236,21 @@ L_main19:
 	INCF       main_i_L0+0, 1
 	GOTO       L_main19
 L_main20:
-;Calculadora.c,68 :: 		}
+;fim da rotina de identificação de operação matemática
 	GOTO       L_main22
+;********************************************************************************
+	
+	
 ;********************************************************************************
 ; Rotina de comando do resultado						*
 ;********************************************************************************
 L_main18:
-;Calculadora.c,69 :: 		else if(k == '=')
+;quando recebido o comando de "="
 	MOVF       main_k_L0+0, 0
 	XORLW      61
 	BTFSS      STATUS+0, 2
 	GOTO       L_main23
-;Calculadora.c,71 :: 		rvalue = atof(numero);
+;conversão texto p/ número real e atribuição do mesmo para registrador _rvalue
 	MOVLW      _numero+0
 	MOVWF      FARG_atof_s+0
 	CALL       _atof+0
@@ -244,20 +262,45 @@ L_main18:
 	MOVWF      _rvalue+2
 	MOVF       R0+3, 0
 	MOVWF      _rvalue+3
-;Calculadora.c,72 :: 		NEGATIVO = 0;
+;reset da flag de negativo>positivo
 	BCF        _flags+0, 1
-;Calculadora.c,73 :: 		lcd_chr_CP('=');
+;chamada de função para impressão do símbolo no LCD
 	MOVLW      61
 	MOVWF      FARG_Lcd_Chr_CP_out_char+0
 	CALL       _Lcd_Chr_CP+0
-;Calculadora.c,75 :: 		switch(op)
+;jump para estrutura condicional do registrador main_op_L "op"
 	GOTO       L_main24
-;Calculadora.c,77 :: 		case '+':
 ;********************************************************************************
-; Rotina para soma das parcelas							*
+
+	
+;********************************************************************************
+; Rotina de desambiguação (identificação de operação e jump)			*
+;********************************************************************************
+L_main24:
+	MOVF       main_op_L_L0+0, 0
+	XORLW      43
+	BTFSC      STATUS+0, 2
+	GOTO       L_main26
+	MOVF       main_op_L_L0+0, 0
+	XORLW      45
+	BTFSC      STATUS+0, 2
+	GOTO       L_main27
+	MOVF       main_op_L_L0+0, 0
+	XORLW      47
+	BTFSC      STATUS+0, 2
+	GOTO       L_main30
+	MOVF       main_op_L_L0+0, 0
+	XORLW      42
+	BTFSC      STATUS+0, 2
+	GOTO       L_main31
+;********************************************************************************
+	
+	
+;********************************************************************************
+; Rotina para soma das parcelas	(main_op_L == '+')				*
 ;********************************************************************************
 L_main26:
-;Calculadora.c,78 :: 		lvalue += rvalue;
+;soma os bits do _lvalue com _rvalue
 	MOVF       _lvalue+0, 0
 	MOVWF      R0+0
 	MOVF       _lvalue+1, 0
@@ -283,14 +326,16 @@ L_main26:
 	MOVWF      _lvalue+2
 	MOVF       R0+3, 0
 	MOVWF      _lvalue+3
-;Calculadora.c,79 :: 		break;
+;final da rotina de soma e jump para final da estrutura condicional "op"
 	GOTO       L_main25
-;Calculadora.c,80 :: 		case '-':
 ;********************************************************************************
-; Rotina para subtração das parcelas						*
+	
+	
+;********************************************************************************
+; Rotina para subtração das parcelas (main_op_L == '-')				*
 ;********************************************************************************
 L_main27:
-;Calculadora.c,81 :: 		if(lvalue >= rvalue)
+;verifica se _lvalue é maior ou igual que _rvalue
 	MOVF       _rvalue+0, 0
 	MOVWF      R4+0
 	MOVF       _rvalue+1, 0
@@ -315,7 +360,7 @@ L_main27:
 	MOVF       R0+0, 0
 	BTFSC      STATUS+0, 2
 	GOTO       L_main28
-;Calculadora.c,83 :: 		lvalue -= rvalue;
+;subtrai os bits do _lvalue com _rvalue
 	MOVF       _rvalue+0, 0
 	MOVWF      R4+0
 	MOVF       _rvalue+1, 0
@@ -341,12 +386,12 @@ L_main27:
 	MOVWF      _lvalue+2
 	MOVF       R0+3, 0
 	MOVWF      _lvalue+3
-;Calculadora.c,84 :: 		NEGATIVO = 0;
+;reset da flag de negativo>positivo
 	BCF        _flags+0, 1
-;Calculadora.c,85 :: 		}
+;jump para final de rotina de subtração
 	GOTO       L_main29
 L_main28:
-;Calculadora.c,88 :: 		lvalue = rvalue - lvalue;
+;subtrai os bits do _rvalue com _lvalue
 	MOVF       _lvalue+0, 0
 	MOVWF      R4+0
 	MOVF       _lvalue+1, 0
@@ -372,18 +417,20 @@ L_main28:
 	MOVWF      _lvalue+2
 	MOVF       R0+3, 0
 	MOVWF      _lvalue+3
-;Calculadora.c,89 :: 		NEGATIVO = 1;
+;reset da flag de positivo>negativo
 	BSF        _flags+0, 1
-;Calculadora.c,90 :: 		}
+;final da rotina de subtração 
 L_main29:
-;Calculadora.c,91 :: 		break;
+;jump para final da estrutura condicional "op"
 	GOTO       L_main25
-;Calculadora.c,92 :: 		case '/':
 ;********************************************************************************
-; Rotina para divisão das parcelas						*
+	
+	
+;********************************************************************************
+; Rotina para divisão das parcelas (main_op_L == '/')				*
 ;********************************************************************************
 L_main30:
-;Calculadora.c,93 :: 		lvalue /= rvalue;
+;divide os bits do _lvalue com _rvalue
 	MOVF       _rvalue+0, 0
 	MOVWF      R4+0
 	MOVF       _rvalue+1, 0
@@ -409,14 +456,16 @@ L_main30:
 	MOVWF      _lvalue+2
 	MOVF       R0+3, 0
 	MOVWF      _lvalue+3
-;Calculadora.c,94 :: 		break;
+;fim da rotina de divisão e jump para final da estrutura condicional "op"
 	GOTO       L_main25
-;Calculadora.c,95 :: 		case '*':
 ;********************************************************************************
-; Rotina para multiplicação das parcelas					*
+	
+	
+;********************************************************************************
+; Rotina para multiplicação das parcelas (main_op_L == '*')			*
 ;********************************************************************************
 L_main31:
-;Calculadora.c,96 :: 		lvalue *= rvalue;
+;multiplica os bits do _lvalue com _rvalue
 	MOVF       _lvalue+0, 0
 	MOVWF      R0+0
 	MOVF       _lvalue+1, 0
@@ -442,31 +491,16 @@ L_main31:
 	MOVWF      _lvalue+2
 	MOVF       R0+3, 0
 	MOVWF      _lvalue+3
-;Calculadora.c,97 :: 		break;
+;fim da rotina de multiplicação e jump para final da estrutura condicional "op"
 	GOTO       L_main25
-;Calculadora.c,98 :: 		}
-L_main24:
-	MOVF       main_op_L0+0, 0
-	XORLW      43
-	BTFSC      STATUS+0, 2
-	GOTO       L_main26
-	MOVF       main_op_L0+0, 0
-	XORLW      45
-	BTFSC      STATUS+0, 2
-	GOTO       L_main27
-	MOVF       main_op_L0+0, 0
-	XORLW      47
-	BTFSC      STATUS+0, 2
-	GOTO       L_main30
-	MOVF       main_op_L0+0, 0
-	XORLW      42
-	BTFSC      STATUS+0, 2
-	GOTO       L_main31
 ;********************************************************************************
-; Rotina para converter número real para texto					*
+	
+	
+;********************************************************************************
+; Rotina para converter de número real para texto				*
 ;********************************************************************************
 L_main25:
-;Calculadora.c,100 :: 		floattostr(lvalue, resultado  + NEGATIVO);
+;conversão de bits do número real para texto
 	MOVF       _lvalue+0, 0
 	MOVWF      FARG_FloatToStr_fnum+0
 	MOVF       _lvalue+1, 0
@@ -482,16 +516,19 @@ L_main25:
 	ADDLW      _resultado+0
 	MOVWF      FARG_FloatToStr_str+0
 	CALL       _FloatToStr+0
-;Calculadora.c,101 :: 		if(NEGATIVO) *(resultado) = '-';
+;verificação da flag para caso negativo e concatenação do '-'
 	BTFSS      _flags+0, 1
 	GOTO       L_main32
 	MOVLW      45
 	MOVWF      _resultado+0
 ;********************************************************************************
+	
+	
+;********************************************************************************
 ; Rotina para imprimir resultado no LCD						*
 ;********************************************************************************
 L_main32:
-;Calculadora.c,102 :: 		lcd_out(2,1,resultado);
+;impressão do resultado na linha 2, coluna 1
 	MOVLW      2
 	MOVWF      FARG_Lcd_Out_row+0
 	MOVLW      1
@@ -499,19 +536,26 @@ L_main32:
 	MOVLW      _resultado+0
 	MOVWF      FARG_Lcd_Out_text+0
 	CALL       _Lcd_Out+0
-;Calculadora.c,103 :: 		CALCULO_OK = 1;
+;atualização da flag de finalização de cálculo
 	BSF        _flags+0, 0
-;Calculadora.c,104 :: 		}
+;********************************************************************************
+	
+	
+;********************************************************************************
+; Rotina de finalização de laços de controle					*
+;********************************************************************************	
+;fim da rotina de cálculo da operação
 L_main23:
 L_main22:
 L_main15:
-;Calculadora.c,105 :: 		delay_ms(200);
+;delay de 200 ms
 	MOVLW      3
 	MOVWF      R11+0
 	MOVLW      8
 	MOVWF      R12+0
 	MOVLW      119
 	MOVWF      R13+0
+;decremento iterativo para zerar registradores do delay
 L_main33:
 	DECFSZ     R13+0, 1
 	GOTO       L_main33
@@ -519,9 +563,8 @@ L_main33:
 	GOTO       L_main33
 	DECFSZ     R11+0, 1
 	GOTO       L_main33
-;Calculadora.c,106 :: 		}
+;fim do laço de loop do algoritmo
 	GOTO       L_main1
-;Calculadora.c,107 :: 		}
+;fim da função principal
 L_end_main:
 	GOTO       $+0
-; end of _main
