@@ -181,7 +181,6 @@ L_main14:
 ; Rotina de entrada da operação matemática					*
 ;********************************************************************************
 L_main13:
-;Calculadora.c,61 :: 		else if(k == '+' || k=='-' || k=='/' || k=='*')
 ;verificação de símbolo aritmético
 	MOVF       main_k_L0+0, 0
 	XORLW      43
